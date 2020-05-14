@@ -63,5 +63,38 @@ namespace Synet
         }
         return true;
     }
+
+    template <template<class> class Network> bool SetInputs(Network<float> & network, const Views & views, Floats lower, Floats upper)
+    {
+        SYNET_PERF_FUNC();
+        if (network.Src().size() != views.size() || lower.size() != upper.size())
+            return false;
+        const Shape & shape = network.NchwShape();
+        if (shape.size() != 4 || shape[0] != 1)
+            return false;
+        if (shape[1] != 1 && shape[1] != 3)
+            return false;
+        if (lower.size() != 1 && lower.size() != shape[1])
+            return false;
+        for (size_t i = 0; i < views.size(); ++i)
+        {
+            if (views[i].width != shape[3] || views[i].height != shape[2] || views[i].format != views[0].format)
+                return false;
+            if (views[i].format != View::Gray8 && views[i].format != View::Bgr24 &&
+                views[i].format != View::Bgra32 && views[i].format != View::Rgb24)
+                return false;
+        }
+        if (lower.size() == 1)
+            lower.resize(shape[1], lower[0]);
+        if (upper.size() == 1)
+            upper.resize(shape[1], upper[0]);
+        for (size_t i = 0; i < views.size(); ++i)
+        {
+            float * dst = network.Src()[i]->CpuData();
+            SimdSynetSetInput(views[i].data, views[i].width, views[i].height, views[i].stride, (SimdPixelFormatType)views[i].format,
+                lower.data(), upper.data(), dst, shape[1], (SimdTensorFormatType)network.Format());
+        }
+        return true;
+    }
 #endif
 }

@@ -23,12 +23,13 @@ private:
 class View {
 public:
 
-    View(cv::Mat img);
+    View(const cv::Mat &img);
+    View(const View &view);
     ~View();
 
 private:
     class impl;
-    std::unique_ptr<impl> pimpl;
+    std::shared_ptr<impl> pimpl;
 
     friend class Network;
 };
@@ -48,6 +49,9 @@ public:
 
     bool SetInput(const View &view, float lower, float upper);
     bool SetInput(const View &view, const std::vector<float> &lower, const std::vector<float> &upper);
+
+    bool SetInputs(const std::vector<View> &views, float lower, float upper);
+    bool SetInputs(const std::vector<View> &views, const std::vector<float> &lower, const std::vector<float> &upper);
 
     const TensorPtrs Src() const;
     const TensorPtrs Dst() const;

@@ -351,6 +351,16 @@ namespace Synet
         {
             return Synet::SetInput(*this, views, lower, upper);
         }
+
+        bool SetInputs(const Views & views, float lower, float upper)
+        {
+            return Synet::SetInputs(*this, views, Floats({ lower }), Floats({ upper }));
+        }
+
+        bool SetInputs(const Views & views, const Floats & lower, const Floats & upper)
+        {
+            return Synet::SetInputs(*this, views, lower, upper);
+        }
 #endif
 
         bool GetMetaConst(const String & name, Tensor & value) const

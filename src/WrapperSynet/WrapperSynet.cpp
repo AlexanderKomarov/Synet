@@ -29,19 +29,23 @@ Tensor::Tensor() {}
 
 class View::impl {
 public:
-    impl(cv::Mat img)
+    impl(const cv::Mat &img)
         : view_(img)
     {}
 
     Synet::View view_;
 };
 
-View::View(cv::Mat img)
-    : pimpl{std::make_unique<impl>(img)}
+View::View(const cv::Mat &img)
+    : pimpl{std::make_shared<impl>(img)}
 {
 }
 
-View::~View()
+View::~View() {
+}
+
+View::View(const View &view)
+    : pimpl{view.pimpl}
 {
 }
 
@@ -106,4 +110,21 @@ bool Network::SetInput(const View &view, float lower, float upper) {
 bool Network::SetInput(const View &view, const std::vector<float> &lower, const std::vector<float> &upper) {
     return pimpl->net_.SetInput(view.pimpl->view_, lower, upper);
 }
+
+bool Network::SetInputs(const std::vector<View> &views, float lower, float upper) {
+    std::vector<Synet::View> v;
+    for (int i = 0; i < views.size(); ++i) {
+        v.push_back(views[i].pimpl->view_);
+    }
+    return pimpl->net_.SetInputs(v, lower, upper);
+}
+
+bool Network::SetInputs(const std::vector<View> &views, const std::vector<float> &lower, const std::vector<float> &upper) {
+    std::vector<Synet::View> v;
+    for (int i = 0; i < views.size(); ++i) {
+        v.push_back(views[i].pimpl->view_);
+    }
+    return pimpl->net_.SetInputs(v, lower, upper);
+}
+
 } // namespace WrapperSynet
