@@ -127,4 +127,68 @@ bool Network::SetInputs(const std::vector<View> &views, const std::vector<float>
     return pimpl->net_.SetInputs(v, lower, upper);
 }
 
+float ToFloat(float value, float scale, float shift) {
+    return value * scale + shift;
+}
+
+float ToBgrFloat(const float* src, size_t channel) {
+    return src[channel];
+}
+
+void loadToSynetFloat(const float* src, size_t width, size_t height, size_t stride,
+            const std::vector<float> &lower, const std::vector<float> &upper, float *dst, size_t channels) {
+    float scale[3];
+    const int step = 3;
+    for (size_t i = 0; i < channels; ++i) {
+        scale[i] = (upper[i] - lower[i]) / 255.0f;
+    }
+
+    for (size_t y = 0; y < height; ++y) {
+        for (size_t x = 0; x < width; ++x, src += step) {
+            *dst++ = ToFloatF(ToBgrFloat(src, 0), scale[0], lower[0]);
+            *dst++ = ToFloatF(ToBgrFloat(src, 1), scale[1], lower[1]);
+            *dst++ = ToFloatF(ToBgrFloat(src, 2), scale[2], lower[2]);
+        }
+        src += (stride - width * step);
+    }
+}
+
+bool Network::SetInputs(const std::vector<cv::Mat> &views, const std::vector<float> &lower, const std::vector<float> &upper)
+    if (pimpl->net_.Src().size() != views.size() || lower.size() != upper.size()) {
+        return false;
+    }
+    const auto& shape = pimpl->net_.NchwShape();
+    if (shape.size() != 4 || shape[0] != 1) {
+        return false;
+    }
+    if (shape[1] != 3) {
+        return false;
+    }
+    if (lower.size() != shape[1]) {
+        return false;
+    }
+    for (size_t i = 0; i < views.size(); ++i) {
+        if (views[i].cols != shape[3] || views[i].rows != shape[2]) {
+            return false;
+        }
+        if (views[i].type() != CV_32FC3) {
+            return false;
+        }
+        if (!views[i].isContinuous()) {
+            return false;
+        }
+    }
+    for (size_t i = 0; i < pimpl->net_.Src().size(); ++i) {
+        if (pimpl->net_.Src()[0]->Format() != Synet::TensorFormatNhwc) {
+            return false;
+        }
+    }
+    for (size_t i = 0; i < views.size(); ++i) {
+        float * dst = pimpl->net_.Src()[i]->CpuData();
+        loadToSynetFloat((float*)views[i].data, views[i].cols, views[i].rows, views[i].step1(),
+            lower, upper, dst, 3);
+    }
+    return true;
+}
+
 } // namespace WrapperSynet

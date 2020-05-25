@@ -50,8 +50,11 @@ public:
     bool SetInput(const View &view, float lower, float upper);
     bool SetInput(const View &view, const std::vector<float> &lower, const std::vector<float> &upper);
 
+    // Load 8U data
     bool SetInputs(const std::vector<View> &views, float lower, float upper);
     bool SetInputs(const std::vector<View> &views, const std::vector<float> &lower, const std::vector<float> &upper);
+    // Load float data. Now supports only CV_32FC3 format and Nhwc format.
+    bool SetInputs(const std::vector<cv::Mat> &views, const std::vector<float> &lower, const std::vector<float> &upper);
 
     const TensorPtrs Src() const;
     const TensorPtrs Dst() const;
