@@ -145,15 +145,15 @@ void loadToSynetFloat(const float* src, size_t width, size_t height, size_t stri
 
     for (size_t y = 0; y < height; ++y) {
         for (size_t x = 0; x < width; ++x, src += step) {
-            *dst++ = ToFloatF(ToBgrFloat(src, 0), scale[0], lower[0]);
-            *dst++ = ToFloatF(ToBgrFloat(src, 1), scale[1], lower[1]);
-            *dst++ = ToFloatF(ToBgrFloat(src, 2), scale[2], lower[2]);
+            *dst++ = ToFloat(ToBgrFloat(src, 0), scale[0], lower[0]);
+            *dst++ = ToFloat(ToBgrFloat(src, 1), scale[1], lower[1]);
+            *dst++ = ToFloat(ToBgrFloat(src, 2), scale[2], lower[2]);
         }
         src += (stride - width * step);
     }
 }
 
-bool Network::SetInputs(const std::vector<cv::Mat> &views, const std::vector<float> &lower, const std::vector<float> &upper)
+bool Network::SetInputs(const std::vector<cv::Mat> &views, const std::vector<float> &lower, const std::vector<float> &upper) {
     if (pimpl->net_.Src().size() != views.size() || lower.size() != upper.size()) {
         return false;
     }
